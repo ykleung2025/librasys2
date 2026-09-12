@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圖書借還系統</title>
+    <title>圖書借還管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800">
 
+    <!-- 頂部導航列 -->
     <nav class="bg-indigo-600 text-white shadow-lg">
         <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-xl font-bold flex items-center gap-2">
                 <i class="fa-solid fa-book-open"></i> 圖書借還系統
             </h1>
             <div class="space-x-2">
-                <button onclick="switchTab('borrow')" id="tab-borrow-btn" class="px-3 py-1.5 rounded-lg bg-indigo-800 font-medium text-sm">
+                <button onclick="switchTab('borrow')" id="tab-borrow-btn" class="px-3 py-1.5 rounded-lg bg-indigo-800 font-medium text-sm transition-all">
                     <i class="fa-solid fa-camera"></i> 借用人拍照
                 </button>
-                <button onclick="switchTab('admin')" id="tab-admin-btn" class="px-3 py-1.5 rounded-lg hover:bg-indigo-700 font-medium text-sm">
+                <button onclick="switchTab('admin')" id="tab-admin-btn" class="px-3 py-1.5 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-all">
                     <i class="fa-solid fa-user-shield"></i> 管理員後台
                 </button>
             </div>
@@ -53,12 +54,12 @@
 
         <!-- 2. 管理員頁面 -->
         <section id="view-admin" class="hidden space-y-6">
-            <!-- 登入 -->
+            <!-- 登入介面 -->
             <div id="admin-login" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-md mx-auto text-center">
                 <i class="fa-solid fa-lock text-3xl text-indigo-500 mb-3"></i>
                 <h2 class="text-lg font-bold mb-4">管理員身份驗證</h2>
                 <input type="password" id="adminPassword" placeholder="預設密碼 1212" class="w-full px-4 py-2 border rounded-lg mb-4 text-center">
-                <button onclick="checkPassword()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold">登入</button>
+                <button onclick="checkPassword()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700">登入</button>
             </div>
 
             <!-- 後台內容 -->
@@ -99,7 +100,7 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-700">最新上傳相片及借閱紀錄</h3>
-                        <button onclick="loadSystemData()" class="text-indigo-600 text-xs font-semibold"><i class="fa-solid fa-rotate-right"></i> 重新整理</button>
+                        <button onclick="loadSystemData()" class="text-indigo-600 text-xs font-semibold hover:underline"><i class="fa-solid fa-rotate-right"></i> 重新整理</button>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -126,34 +127,52 @@
     </main>
 
     <footer class="mt-8 text-center text-xs text-slate-400 p-4">
-        <button onclick="toggleConfig()" class="underline">設定 GAS 網址</button>
-        <div id="configPanel" class="hidden max-w-md mx-auto mt-2 p-3 bg-white border rounded-lg">
-            <input type="text" id="gasUrlInput" class="w-full border p-1.5 text-xs rounded mb-2">
-            <button onclick="saveConfig()" class="w-full bg-slate-800 text-white py-1 rounded text-xs">儲存</button>
+        <button onclick="toggleConfig()" class="underline">設定 GAS 網頁應用程式網址</button>
+        <div id="configPanel" class="hidden max-w-md mx-auto mt-2 p-3 bg-white border rounded-lg shadow-md">
+            <input type="text" id="gasUrlInput" placeholder="請貼上以 /exec 結尾的網頁應用程式網址" class="w-full border p-2 text-xs rounded mb-2">
+            <button onclick="saveConfig()" class="w-full bg-slate-800 text-white py-1.5 rounded text-xs">儲存設定</button>
         </div>
     </footer>
 
     <script>
-        const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxF_jZZgITHU0UfFigeKcNc1B-Qp45CKnetghAj-8aqXmaNvyfkS8i-sAThBjaQLrRi/exec';
+        const DEFAULT_GAS_URL = '請貼上你的_GAS_Web_App_URL';
         let GAS_URL = localStorage.getItem('GAS_URL') || DEFAULT_GAS_URL;
         let selectedBase64 = '';
 
-        window.onload = () => { document.getElementById('gasUrlInput').value = GAS_URL; };
-        function toggleConfig() { document.getElementById('configPanel').classList.toggle('hidden'); }
+        window.onload = () => { 
+            document.getElementById('gasUrlInput').value = GAS_URL; 
+        };
+
+        function toggleConfig() { 
+            document.getElementById('configPanel').classList.toggle('hidden'); 
+        }
+
         function saveConfig() {
-            GAS_URL = document.getElementById('gasUrlInput').value.trim() || DEFAULT_GAS_URL;
+            const url = document.getElementById('gasUrlInput').value.trim();
+            if (url && !url.endsWith('/exec')) {
+                alert('警告：網址格式不正確，結尾必須是 /exec');
+                return;
+            }
+            GAS_URL = url || DEFAULT_GAS_URL;
             localStorage.setItem('GAS_URL', GAS_URL);
-            alert('已更新！');
+            alert('已成功儲存 GAS 網頁應用程式網址！');
             toggleConfig();
         }
 
         function switchTab(tab) {
+            const borrowBtn = document.getElementById('tab-borrow-btn');
+            const adminBtn = document.getElementById('tab-admin-btn');
+            
             if (tab === 'borrow') {
                 document.getElementById('view-borrow').classList.remove('hidden');
                 document.getElementById('view-admin').classList.add('hidden');
+                borrowBtn.classList.add('bg-indigo-800');
+                adminBtn.classList.remove('bg-indigo-800');
             } else {
                 document.getElementById('view-borrow').classList.add('hidden');
                 document.getElementById('view-admin').classList.remove('hidden');
+                adminBtn.classList.add('bg-indigo-800');
+                borrowBtn.classList.remove('bg-indigo-800');
             }
         }
 
@@ -170,25 +189,63 @@
             reader.readAsDataURL(file);
         }
 
-        // 借用人：上傳照片
+        // 相片自動壓縮 (將拍攝大圖壓縮，避免 GAS 傳輸超時)
+        function compressBase64(base64Str, maxWidth = 1000, quality = 0.7) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = base64Str;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+            });
+        }
+
+        // 借用人：上傳照片 (含壓縮 logic)
         async function uploadBorrowPhoto() {
             if (!selectedBase64) { alert('請先拍攝或選擇照片！'); return; }
+            if (!GAS_URL || GAS_URL.includes('請貼上你的')) {
+                alert('請點擊頁尾「設定 GAS 網頁應用程式網址」，輸入正確的網址！');
+                toggleConfig();
+                return;
+            }
+
             const btn = document.getElementById('btnUpload');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> 上傳中...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> 壓縮與上傳中...';
 
             try {
+                // 自動先將圖檔進行壓縮
+                const compressedBase64 = await compressBase64(selectedBase64);
+
                 const res = await fetch(GAS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'uploadPhoto', imageBase64: selectedBase64 })
+                    body: JSON.stringify({ action: 'uploadPhoto', imageBase64: compressedBase64 })
                 });
+                
                 const result = await res.json();
-                alert(result.message);
-                selectedBase64 = '';
-                document.getElementById('previewBox').classList.add('hidden');
+                if (result.status === 'success') {
+                    alert(result.message);
+                    selectedBase64 = '';
+                    document.getElementById('previewBox').classList.add('hidden');
+                    document.getElementById('photoInput').value = '';
+                } else {
+                    alert('系統錯誤：' + result.message);
+                }
             } catch (err) {
-                alert('上傳失敗，請重試！');
+                console.error(err);
+                alert('上傳失敗！請確認：\n1. 網頁應用程式網址是否正確 (結尾為 /exec)\n2. GAS 部署權限是否已設定為「所有人 (Anyone)」');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 上傳照片辦理借書';
@@ -206,6 +263,11 @@
 
         // 載入資料庫下拉選單與紀錄
         async function loadSystemData() {
+            if (!GAS_URL || GAS_URL.includes('請貼上你的')) return;
+            
+            const tbody = document.getElementById('recordsTbody');
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner animate-spin"></i> 載入資料庫中...</td></tr>';
+
             try {
                 const res = await fetch(GAS_URL);
                 const data = await res.json();
@@ -225,21 +287,27 @@
                 });
 
                 // 表格列表
-                const tbody = document.getElementById('recordsTbody');
-                tbody.innerHTML = data.records.reverse().map(r => `
-                    <tr>
-                        <td class="p-3 text-xs text-slate-400">${r.date}</td>
-                        <td class="p-3">${r.photoUrl.startsWith('http') ? `<a href="${r.photoUrl}" target="_blank" class="text-indigo-600 font-semibold underline text-xs">查看照片</a>` : '無'}</td>
-                        <td class="p-3 font-semibold">${r.bookId || '-'}</td>
-                        <td class="p-3">${r.studentId || '-'}</td>
-                        <td class="p-3 text-xs"><span class="px-2 py-1 rounded bg-slate-100">${r.status}</span></td>
-                        <td class="p-3 text-center">
-                            ${r.bookId ? `<button onclick="returnBook('${r.bookId}')" class="px-2 py-1 bg-rose-100 text-rose-700 rounded text-xs">辦理還書</button>` : '<span class="text-xs text-slate-300">待填寫</span>'}
-                        </td>
-                    </tr>
-                `).join('');
+                if (!data.records || data.records.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">目前暫無紀錄</td></tr>';
+                } else {
+                    tbody.innerHTML = data.records.reverse().map(r => `
+                        <tr>
+                            <td class="p-3 text-xs text-slate-400">${r.date}</td>
+                            <td class="p-3">${r.photoUrl.startsWith('http') ? `<a href="${r.photoUrl}" target="_blank" class="text-indigo-600 font-semibold underline text-xs"><i class="fa-solid fa-image"></i> 查看照片</a>` : '無'}</td>
+                            <td class="p-3 font-semibold">${r.bookId || '-'}</td>
+                            <td class="p-3">${r.studentId || '-'}</td>
+                            <td class="p-3 text-xs"><span class="px-2 py-1 rounded ${r.status === '已借出' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100'}">${r.status}</span></td>
+                            <td class="p-3 text-center">
+                                ${r.bookId ? `<button onclick="returnBook('${r.bookId}')" class="px-2 py-1 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded text-xs font-medium">辦理還書</button>` : '<span class="text-xs text-slate-300">待填寫</span>'}
+                            </td>
+                        </tr>
+                    `).join('');
+                }
 
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-rose-500">載入失敗，請檢查 GAS 網址連線狀態</td></tr>';
+            }
         }
 
         function syncBookInput() { document.getElementById('inputBookId').value = document.getElementById('selectBook').value; }
@@ -250,29 +318,43 @@
             const bookId = document.getElementById('inputBookId').value.trim();
             const studentId = document.getElementById('inputStudentId').value.trim();
 
-            if (!bookId || !studentId) { alert('請輸入/選擇書籍編號及學生編號！'); return; }
+            if (!bookId || !studentId) { alert('請輸入或揀選書籍編號及學生編號！'); return; }
 
-            const res = await fetch(GAS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'issueBook', bookId: bookId, studentId: studentId })
-            });
-            const result = await res.json();
-            alert(result.message);
-            loadSystemData();
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'issueBook', bookId: bookId, studentId: studentId })
+                });
+                const result = await res.json();
+                alert(result.message);
+                
+                // 清空輸入框並重新載入
+                document.getElementById('inputBookId').value = '';
+                document.getElementById('inputStudentId').value = '';
+                document.getElementById('selectBook').value = '';
+                document.getElementById('selectStudent').value = '';
+                loadSystemData();
+            } catch (err) {
+                alert('辦理失敗，請重試！');
+            }
         }
 
         // 管理員：還書
         async function returnBook(bookId) {
-            if (!confirm(`確認還書 (書號: ${bookId})？`)) return;
-            const res = await fetch(GAS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'returnBook', bookId: bookId })
-            });
-            const result = await res.json();
-            alert(result.message);
-            loadSystemData();
+            if (!confirm(`確認要辦理還書 (書號: ${bookId})？`)) return;
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'returnBook', bookId: bookId })
+                });
+                const result = await res.json();
+                alert(result.message);
+                loadSystemData();
+            } catch (err) {
+                alert('還書失敗，請重試！');
+            }
         }
     </script>
 </body>
