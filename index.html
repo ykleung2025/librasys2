@@ -1,199 +1,235 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圖書借還管理系統</title>
+    <title>圖書自助借還系統</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- FontAwesome 圖標 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800">
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-12">
 
-    <!-- 頂部導航列 -->
-    <nav class="bg-indigo-600 text-white shadow-lg">
+    <!-- 頂部導覽列 -->
+    <header class="bg-indigo-600 text-white shadow-md">
         <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-xl font-bold flex items-center gap-2">
-                <i class="fa-solid fa-book-open"></i> 圖書借還系統
+                <i class="fa-solid fa-book-bookmark"></i> 圖書借還管理系統
             </h1>
-            <div class="space-x-2">
-                <button onclick="switchTab('borrow')" id="tab-borrow-btn" class="px-3 py-1.5 rounded-lg bg-indigo-800 font-medium text-sm transition-all">
-                    <i class="fa-solid fa-camera"></i> 借用人拍照
-                </button>
-                <button onclick="switchTab('admin')" id="tab-admin-btn" class="px-3 py-1.5 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-all">
-                    <i class="fa-solid fa-user-shield"></i> 管理員後台
-                </button>
-            </div>
+            <button onclick="openConfigModal()" class="text-xs bg-indigo-700 hover:bg-indigo-800 px-3 py-1.5 rounded text-indigo-100 flex items-center gap-1">
+                <i class="fa-solid fa-gear"></i> 設定 API 網址
+            </button>
         </div>
-    </nav>
+    </header>
 
-    <main class="max-w-4xl mx-auto p-4">
+    <main class="max-w-4xl mx-auto px-4 mt-6">
+        <!-- 分頁切換按鈕 -->
+        <div class="flex bg-white rounded-xl shadow p-1 mb-6">
+            <button id="tabBtnBorrow" onclick="switchTab('borrow')" class="flex-1 py-2.5 rounded-lg font-semibold text-indigo-600 bg-indigo-50 transition">
+                <i class="fa-solid fa-hand-holding-hand mr-1"></i> 辦理借書
+            </button>
+            <button id="tabBtnAdmin" onclick="switchTab('admin')" class="flex-1 py-2.5 rounded-lg font-semibold text-slate-500 hover:text-indigo-600 transition">
+                <i class="fa-solid fa-user-shield mr-1"></i> 管理員後台
+            </button>
+        </div>
 
-        <!-- 1. 借用人拍照上傳頁面 -->
-        <section id="view-borrow" class="space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
-                <h2 class="text-lg font-bold text-slate-700 mb-1">借書登記 (合照上傳)</h2>
-                <p class="text-xs text-slate-500 mb-6">請將【書本】與【學生證】放在一起拍攝一張清晰照片</p>
+        <!-- 1. 辦理借書區塊 -->
+        <section id="sectionBorrow" class="bg-white rounded-xl shadow-md p-6 space-y-6">
+            <h2 class="text-lg font-bold border-b pb-3 text-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-camera text-indigo-500"></i> 拍照登記借書
+            </h2>
 
-                <div class="flex flex-col items-center justify-center">
-                    <label class="cursor-pointer w-full max-w-md bg-indigo-50 border-2 border-dashed border-indigo-300 hover:border-indigo-500 p-8 rounded-2xl flex flex-col items-center justify-center transition-all mb-4">
-                        <i class="fa-solid fa-camera-retro text-4xl text-indigo-500 mb-2"></i>
-                        <span class="text-sm font-semibold text-indigo-700">點擊拍照 / 選擇照片</span>
-                        <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" onchange="previewPhoto(event)">
-                    </label>
-
-                    <div id="previewBox" class="hidden w-full max-w-md h-64 bg-slate-900 rounded-xl overflow-hidden relative mb-4">
-                        <img id="previewImg" class="w-full h-full object-contain">
-                    </div>
-
-                    <button id="btnUpload" onclick="uploadBorrowPhoto()" class="w-full max-w-md py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-md hover:bg-indigo-700 transition-all text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-paper-plane"></i> 上傳照片辦理借書
-                    </button>
+            <!-- 選擇學生與書籍 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">1. 選擇借閱學生</label>
+                    <select id="selectStudent" class="w-full border rounded-lg p-2.5 bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="">-- 載入中... --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">2. 選擇借閱書籍</label>
+                    <select id="selectBook" class="w-full border rounded-lg p-2.5 bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="">-- 載入中... --</option>
+                    </select>
                 </div>
             </div>
+
+            <!-- 照片拍攝與預覽 -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">3. 拍攝/選擇借閱照片（證明照片）</label>
+                <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="previewImage(event)" class="hidden">
+                
+                <div id="uploadBox" onclick="document.getElementById('photoInput').click()" class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-indigo-500 hover:bg-slate-50 transition">
+                    <div id="previewPlaceholder" class="space-y-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-4xl text-slate-400"></i>
+                        <p class="text-sm text-slate-500">點擊此處開啟相機或選擇照片</p>
+                    </div>
+                    <img id="imagePreview" class="hidden max-h-64 mx-auto rounded-lg shadow" alt="相片預覽">
+                </div>
+            </div>
+
+            <!-- 提交按鈕 -->
+            <button id="btnSubmitBorrow" onclick="submitBorrow()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-md transition flex justify-center items-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i> 確認辦理借書
+            </button>
         </section>
 
-        <!-- 2. 管理員頁面 -->
-        <section id="view-admin" class="hidden space-y-6">
-            <!-- 登入介面 -->
-            <div id="admin-login" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-md mx-auto text-center">
-                <i class="fa-solid fa-lock text-3xl text-indigo-500 mb-3"></i>
-                <h2 class="text-lg font-bold mb-4">管理員身份驗證</h2>
-                <input type="password" id="adminPassword" placeholder="預設密碼 1212" class="w-full px-4 py-2 border rounded-lg mb-4 text-center">
-                <button onclick="checkPassword()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700">登入</button>
+        <!-- 2. 管理員後台區塊 -->
+        <section id="sectionAdmin" class="hidden space-y-6">
+            <!-- 密碼驗證框 -->
+            <div id="adminAuthBox" class="bg-white rounded-xl shadow-md p-6 max-w-md mx-auto text-center space-y-4">
+                <i class="fa-solid fa-lock text-4xl text-indigo-500"></i>
+                <h3 class="text-lg font-bold text-slate-700">管理員身份驗證</h3>
+                <input type="password" id="adminPassword" placeholder="請輸入管理員密碼" class="w-full border rounded-lg p-2.5 text-center focus:ring-2 focus:ring-indigo-500 outline-none">
+                <button onclick="verifyAdmin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg transition">登入後台</button>
             </div>
 
-            <!-- 後台內容 -->
-            <div id="admin-content" class="hidden space-y-6">
-                
-                <!-- 手動登記 / 揀選借出區 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-hand-holding-hand text-indigo-600"></i> 管理員辦理借出
-                    </h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- 書籍選擇/輸入 -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1">揀選/輸入 書籍編號：</label>
-                            <select id="selectBook" class="w-full p-2.5 border rounded-lg text-sm bg-white mb-2" onchange="syncBookInput()">
-                                <option value="">-- 請選擇可借出書籍 --</option>
-                            </select>
-                            <input type="text" id="inputBookId" placeholder="或手動輸入書籍編號 (如: B001)" class="w-full p-2 border rounded-lg text-sm">
-                        </div>
-
-                        <!-- 學生選擇/輸入 -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1">揀選/輸入 學生編號：</label>
-                            <select id="selectStudent" class="w-full p-2.5 border rounded-lg text-sm bg-white mb-2" onchange="syncStudentInput()">
-                                <option value="">-- 請選擇學生 --</option>
-                            </select>
-                            <input type="text" id="inputStudentId" placeholder="或手動輸入學生編號 (如: S001)" class="w-full p-2 border rounded-lg text-sm">
-                        </div>
-                    </div>
-
-                    <button onclick="submitAdminIssue()" class="w-full mt-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md text-sm">
-                        <i class="fa-solid fa-check"></i> 確認借出書本
+            <!-- 管理員操作內容 -->
+            <div id="adminContent" class="hidden bg-white rounded-xl shadow-md p-6 space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h2 class="text-lg font-bold text-slate-700"><i class="fa-solid fa-list-check text-indigo-500 mr-1"></i> 借用紀錄管理</h2>
+                    <button onclick="loadAdminRecords()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded transition">
+                        <i class="fa-solid fa-rotate-right"></i> 重新整理
                     </button>
                 </div>
 
-                <!-- 借閱記錄與待處理照片 -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-700">最新上傳相片及借閱紀錄</h3>
-                        <button onclick="loadSystemData()" class="text-indigo-600 text-xs font-semibold hover:underline"><i class="fa-solid fa-rotate-right"></i> 重新整理</button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 text-xs border-b">
-                                    <th class="p-3">時間</th>
-                                    <th class="p-3">相片</th>
-                                    <th class="p-3">書本編號</th>
-                                    <th class="p-3">學生編號</th>
-                                    <th class="p-3">狀態</th>
-                                    <th class="p-3 text-center">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recordsTbody" class="divide-y">
-                                <tr><td colspan="6" class="p-4 text-center text-slate-400">載入中...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <!-- 紀錄表格 -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 border-b text-slate-600">
+                                <th class="p-3">時間</th>
+                                <th class="p-3">學生</th>
+                                <th class="p-3">書籍ID</th>
+                                <th class="p-3">相片</th>
+                                <th class="p-3">狀態</th>
+                                <th class="p-3">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableBody">
+                            <tr><td colspan="6" class="p-4 text-center text-slate-400">載入中...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-
             </div>
         </section>
     </main>
 
-    <footer class="mt-8 text-center text-xs text-slate-400 p-4">
-        <button onclick="toggleConfig()" class="underline">設定 GAS 網頁應用程式網址</button>
-        <div id="configPanel" class="hidden max-w-md mx-auto mt-2 p-3 bg-white border rounded-lg shadow-md">
-            <input type="text" id="gasUrlInput" placeholder="請貼上以 /exec 結尾的網頁應用程式網址" class="w-full border p-2 text-xs rounded mb-2">
-            <button onclick="saveConfig()" class="w-full bg-slate-800 text-white py-1.5 rounded text-xs">儲存設定</button>
+    <!-- GAS 網址設定 Modal -->
+    <div id="configModal" class="hidden fixed inset-0 bg-black/50 flex justify-center items-center px-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <h3 class="font-bold text-lg text-slate-800">設定 Web App API 網址</h3>
+            <p class="text-xs text-slate-500">請貼上 Apps Script 部署後以 <code class="bg-slate-100 text-red-500 px-1">/exec</code> 結尾的網址。</p>
+            <input type="url" id="inputGasUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeConfigModal()" class="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-lg">取消</button>
+                <button onclick="saveGasUrl()" class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg font-semibold">儲存</button>
+            </div>
         </div>
-    </footer>
+    </div>
 
     <script>
-        const DEFAULT_GAS_URL = '請貼上你的_GAS_Web_App_URL';
-        let GAS_URL = localStorage.getItem('GAS_URL') || DEFAULT_GAS_URL;
-        let selectedBase64 = '';
+        let GAS_URL = localStorage.getItem('GAS_WEB_APP_URL') || '';
+        let rawBase64 = '';
 
-        window.onload = () => { 
-            document.getElementById('gasUrlInput').value = GAS_URL; 
+        window.onload = function() {
+            if (!GAS_URL) {
+                openConfigModal();
+            } else {
+                fetchInitialData();
+            }
         };
 
-        function toggleConfig() { 
-            document.getElementById('configPanel').classList.toggle('hidden'); 
+        function openConfigModal() {
+            document.getElementById('inputGasUrl').value = GAS_URL;
+            document.getElementById('configModal').classList.remove('hidden');
         }
-
-        function saveConfig() {
-            const url = document.getElementById('gasUrlInput').value.trim();
-            if (url && !url.endsWith('/exec')) {
-                alert('警告：網址格式不正確，結尾必須是 /exec');
+        function closeConfigModal() { document.getElementById('configModal').classList.add('hidden'); }
+        function saveGasUrl() {
+            const url = document.getElementById('inputGasUrl').value.trim();
+            if (!url.endsWith('/exec')) {
+                alert('錯誤：網址必須以 /exec 結尾！');
                 return;
             }
-            GAS_URL = url || DEFAULT_GAS_URL;
-            localStorage.setItem('GAS_URL', GAS_URL);
-            alert('已成功儲存 GAS 網頁應用程式網址！');
-            toggleConfig();
+            localStorage.setItem('GAS_WEB_APP_URL', url);
+            GAS_URL = url;
+            closeConfigModal();
+            fetchInitialData();
         }
 
+        // 切換 Tab
         function switchTab(tab) {
-            const borrowBtn = document.getElementById('tab-borrow-btn');
-            const adminBtn = document.getElementById('tab-admin-btn');
-            
+            const borrowSec = document.getElementById('sectionBorrow');
+            const adminSec = document.getElementById('sectionAdmin');
+            const btnBorrow = document.getElementById('tabBtnBorrow');
+            const btnAdmin = document.getElementById('tabBtnAdmin');
+
             if (tab === 'borrow') {
-                document.getElementById('view-borrow').classList.remove('hidden');
-                document.getElementById('view-admin').classList.add('hidden');
-                borrowBtn.classList.add('bg-indigo-800');
-                adminBtn.classList.remove('bg-indigo-800');
+                borrowSec.classList.remove('hidden');
+                adminSec.classList.add('hidden');
+                btnBorrow.className = "flex-1 py-2.5 rounded-lg font-semibold text-indigo-600 bg-indigo-50 transition";
+                btnAdmin.className = "flex-1 py-2.5 rounded-lg font-semibold text-slate-500 hover:text-indigo-600 transition";
             } else {
-                document.getElementById('view-borrow').classList.add('hidden');
-                document.getElementById('view-admin').classList.remove('hidden');
-                adminBtn.classList.add('bg-indigo-800');
-                borrowBtn.classList.remove('bg-indigo-800');
+                borrowSec.classList.add('hidden');
+                adminSec.classList.remove('hidden');
+                btnAdmin.className = "flex-1 py-2.5 rounded-lg font-semibold text-indigo-600 bg-indigo-50 transition";
+                btnBorrow.className = "flex-1 py-2.5 rounded-lg font-semibold text-slate-500 hover:text-indigo-600 transition";
             }
         }
 
-        // 預覽相片
-        function previewPhoto(e) {
-            const file = e.target.files[0];
+        // 載入初始資料 (學生與書籍)
+        async function fetchInitialData() {
+            if (!GAS_URL) return;
+            try {
+                const res = await fetch(`${GAS_URL}?action=getInitialData`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    renderDropdowns(data.books, data.students);
+                } else {
+                    alert('【後端錯誤】' + data.message);
+                }
+            } catch (err) {
+                alert('【網絡錯誤】無法連線至 API，請檢查網址與部署權限是否設為「所有人」。');
+            }
+        }
+
+        function renderDropdowns(books, students) {
+            const selectBook = document.getElementById('selectBook');
+            const selectStudent = document.getElementById('selectStudent');
+
+            selectBook.innerHTML = '<option value="">-- 請選擇書籍 --</option>';
+            books.forEach(b => {
+                const isBorrowed = b['狀態'] === '已借出';
+                selectBook.innerHTML += `<option value="${b['書本編號']}" ${isBorrowed ? 'disabled' : ''}>${b['書本編號']} - ${b['書名']} ${isBorrowed ? '(已借出)' : ''}</option>`;
+            });
+
+            selectStudent.innerHTML = '<option value="">-- 請選擇學生 --</option>';
+            students.forEach(s => {
+                selectStudent.innerHTML += `<option value="${s['學生編號']}">${s['學生編號']} - ${s['學生姓名']}</option>`;
+            });
+        }
+
+        // 相片預覽
+        function previewImage(event) {
+            const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (event) => {
-                selectedBase64 = event.target.result;
-                document.getElementById('previewImg').src = selectedBase64;
-                document.getElementById('previewBox').classList.remove('hidden');
+            reader.onload = function(e) {
+                rawBase64 = e.target.result;
+                document.getElementById('imagePreview').src = rawBase64;
+                document.getElementById('imagePreview').classList.remove('hidden');
+                document.getElementById('previewPlaceholder').classList.add('hidden');
             };
             reader.readAsDataURL(file);
         }
 
-        // 相片自動壓縮 (將拍攝大圖壓縮，避免 GAS 傳輸超時)
-        function compressBase64(base64Str, maxWidth = 1000, quality = 0.7) {
+        // 前端壓縮相片
+        function compressBase64(base64, maxWidth = 800, quality = 0.7) {
             return new Promise((resolve) => {
                 const img = new Image();
-                img.src = base64Str;
+                img.src = base64;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     let width = img.width;
@@ -211,149 +247,133 @@
             });
         }
 
-        // 借用人：上傳照片 (含壓縮 logic)
-        async function uploadBorrowPhoto() {
-            if (!selectedBase64) { alert('請先拍攝或選擇照片！'); return; }
-            if (!GAS_URL || GAS_URL.includes('請貼上你的')) {
-                alert('請點擊頁尾「設定 GAS 網頁應用程式網址」，輸入正確的網址！');
-                toggleConfig();
+        // 提交借書
+        async function submitBorrow() {
+            const studentId = document.getElementById('selectStudent').value;
+            const bookId = document.getElementById('selectBook').value;
+
+            if (!studentId || !bookId || !rawBase64) {
+                alert('請完整選擇學生、書籍，並拍攝證明相片！');
                 return;
             }
 
-            const btn = document.getElementById('btnUpload');
+            const btn = document.getElementById('btnSubmitBorrow');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> 壓縮與上傳中...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> 圖片處理與上傳中...';
 
             try {
-                // 自動先將圖檔進行壓縮
-                const compressedBase64 = await compressBase64(selectedBase64);
+                const compressedBase64 = await compressBase64(rawBase64);
 
                 const res = await fetch(GAS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'uploadPhoto', imageBase64: compressedBase64 })
+                    body: JSON.stringify({
+                        action: 'borrowBook',
+                        studentId: studentId,
+                        bookId: bookId,
+                        imageBase64: compressedBase64
+                    })
                 });
-                
+
                 const result = await res.json();
                 if (result.status === 'success') {
                     alert(result.message);
-                    selectedBase64 = '';
-                    document.getElementById('previewBox').classList.add('hidden');
-                    document.getElementById('photoInput').value = '';
+                    location.reload();
                 } else {
-                    alert('系統錯誤：' + result.message);
+                    alert('【後端錯誤】' + result.message);
                 }
             } catch (err) {
-                console.error(err);
-                alert('上傳失敗！請確認：\n1. 網頁應用程式網址是否正確 (結尾為 /exec)\n2. GAS 部署權限是否已設定為「所有人 (Anyone)」');
+                alert('【網絡/前端錯誤】' + err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 上傳照片辦理借書';
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 確認辦理借書';
             }
         }
 
-        // 管理員：登入
-        function checkPassword() {
-            if (document.getElementById('adminPassword').value === '1212') {
-                document.getElementById('admin-login').classList.add('hidden');
-                document.getElementById('admin-content').classList.remove('hidden');
-                loadSystemData();
-            } else { alert('密碼錯誤！'); }
+        // 管理員登入
+        function verifyAdmin() {
+            const pwd = document.getElementById('adminPassword').value;
+            if (pwd === '1212') {
+                document.getElementById('adminAuthBox').classList.add('hidden');
+                document.getElementById('adminContent').classList.remove('hidden');
+                loadAdminRecords();
+            } else {
+                alert('密碼錯誤！');
+            }
         }
 
-        // 載入資料庫下拉選單與紀錄
-        async function loadSystemData() {
-            if (!GAS_URL || GAS_URL.includes('請貼上你的')) return;
-            
-            const tbody = document.getElementById('recordsTbody');
-            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner animate-spin"></i> 載入資料庫中...</td></tr>';
-
+        // 載入紀錄
+        async function loadAdminRecords() {
+            const tbody = document.getElementById('recordsTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner animate-spin"></i> 載入中...</td></tr>';
             try {
-                const res = await fetch(GAS_URL);
+                const res = await fetch(`${GAS_URL}?action=getRecords`);
                 const data = await res.json();
-                
-                // 下拉選單：未借出的書
-                const bookSelect = document.getElementById('selectBook');
-                bookSelect.innerHTML = '<option value="">-- 請選擇可借出書籍 --</option>';
-                data.books.filter(b => b.status !== '已借出').forEach(b => {
-                    bookSelect.innerHTML += `<option value="${b.id}">${b.id} - ${b.title}</option>`;
-                });
-
-                // 下拉選單：學生
-                const studentSelect = document.getElementById('selectStudent');
-                studentSelect.innerHTML = '<option value="">-- 請選擇學生 --</option>';
-                data.students.forEach(s => {
-                    studentSelect.innerHTML += `<option value="${s.id}">${s.id} - ${s.name}</option>`;
-                });
-
-                // 表格列表
-                if (!data.records || data.records.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">目前暫無紀錄</td></tr>';
+                if (data.status === 'success') {
+                    renderRecords(data.records);
                 } else {
-                    tbody.innerHTML = data.records.reverse().map(r => `
-                        <tr>
-                            <td class="p-3 text-xs text-slate-400">${r.date}</td>
-                            <td class="p-3">${r.photoUrl.startsWith('http') ? `<a href="${r.photoUrl}" target="_blank" class="text-indigo-600 font-semibold underline text-xs"><i class="fa-solid fa-image"></i> 查看照片</a>` : '無'}</td>
-                            <td class="p-3 font-semibold">${r.bookId || '-'}</td>
-                            <td class="p-3">${r.studentId || '-'}</td>
-                            <td class="p-3 text-xs"><span class="px-2 py-1 rounded ${r.status === '已借出' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100'}">${r.status}</span></td>
-                            <td class="p-3 text-center">
-                                ${r.bookId ? `<button onclick="returnBook('${r.bookId}')" class="px-2 py-1 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded text-xs font-medium">辦理還書</button>` : '<span class="text-xs text-slate-300">待填寫</span>'}
-                            </td>
-                        </tr>
-                    `).join('');
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">${data.message}</td></tr>`;
                 }
-
-            } catch (err) { 
-                console.error(err);
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-rose-500">載入失敗，請檢查 GAS 網址連線狀態</td></tr>';
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">載入失敗，請檢查網路狀態。</td></tr>';
             }
         }
 
-        function syncBookInput() { document.getElementById('inputBookId').value = document.getElementById('selectBook').value; }
-        function syncStudentInput() { document.getElementById('inputStudentId').value = document.getElementById('selectStudent').value; }
+        function renderRecords(records) {
+            const tbody = document.getElementById('recordsTableBody');
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">尚無借閱紀錄</td></tr>';
+                return;
+            }
 
-        // 管理員：提交借出
-        async function submitAdminIssue() {
-            const bookId = document.getElementById('inputBookId').value.trim();
-            const studentId = document.getElementById('inputStudentId').value.trim();
+            tbody.innerHTML = records.reverse().map(r => `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="p-3 text-xs text-slate-500">${r['日期時間'] || ''}</td>
+                    <td class="p-3 font-medium">${r['學生編號'] || ''}</td>
+                    <td class="p-3">${r['書本編號'] || ''}</td>
+                    <td class="p-3">
+                        ${r['照片網址'] ? `<a href="${r['照片網址']}" target="_blank" class="text-indigo-600 hover:underline"><i class="fa-solid fa-image"></i> 查看照片</a>` : '無照片'}
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded text-xs ${r['狀態'] === '借出中' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">
+                            ${r['狀態'] || ''}
+                        </span>
+                    </td>
+                    <td class="p-3">
+                        ${r['狀態'] === '借出中' ? `
+                            <button onclick="returnBook('${r['紀錄ID']}', '${r['書本編號']}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1 rounded transition">
+                                歸還
+                            </button>
+                        ` : '<span class="text-xs text-slate-400">已完結</span>'}
+                    </td>
+                </tr>
+            `).join('');
+        }
 
-            if (!bookId || !studentId) { alert('請輸入或揀選書籍編號及學生編號！'); return; }
+        // 辦理還書
+        async function returnBook(recordId, bookId) {
+            if (!confirm(`確定要辦理書籍 [${bookId}] 的歸還手續嗎？`)) return;
 
             try {
                 const res = await fetch(GAS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'issueBook', bookId: bookId, studentId: studentId })
+                    body: JSON.stringify({
+                        action: 'returnBook',
+                        recordId: recordId,
+                        bookId: bookId
+                    })
                 });
-                const result = await res.json();
-                alert(result.message);
-                
-                // 清空輸入框並重新載入
-                document.getElementById('inputBookId').value = '';
-                document.getElementById('inputStudentId').value = '';
-                document.getElementById('selectBook').value = '';
-                document.getElementById('selectStudent').value = '';
-                loadSystemData();
-            } catch (err) {
-                alert('辦理失敗，請重試！');
-            }
-        }
 
-        // 管理員：還書
-        async function returnBook(bookId) {
-            if (!confirm(`確認要辦理還書 (書號: ${bookId})？`)) return;
-            try {
-                const res = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'returnBook', bookId: bookId })
-                });
                 const result = await res.json();
-                alert(result.message);
-                loadSystemData();
+                if (result.status === 'success') {
+                    alert(result.message);
+                    loadAdminRecords();
+                } else {
+                    alert('【後端錯誤】' + result.message);
+                }
             } catch (err) {
-                alert('還書失敗，請重試！');
+                alert('【網絡錯誤】' + err.message);
             }
         }
     </script>
